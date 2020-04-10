@@ -1,0 +1,37 @@
+if [ $EUID -ne 0 ]; then
+	echo "please run with root permissions"
+else
+	export pwd=$PWD
+	export output_dir=sysinfo_output
+	if [ ! -d $output_dir ]; then
+		mkdir $output_dir
+	fi
+	lscpu > $output_dir/lscpu.txt
+	dmidecode > $output_dir/dmidecode.txt
+	cat /proc/cpuinfo | grep microcode |& tee $output_dir/microcode.txt
+	cat /sys/devices/system/cpu/intel_pstate/no_turbo |& tee $output_dir/noturbo.txt
+	cat /sys/class/dmi/id/bios_version |& tee $output_dir/bios_version.txt
+	cat /etc/os-release |& tee $output_dir/os-release.txt
+	cat /proc/meminfo |& tee $output_dir/meminfo.txt
+	lshw |& tee $output_dir/lshw.txt
+	lspci |& tee $output_dir/lspci.txt
+	git clone https://github.com/speed47/spectre-meltdown-checker
+	export smc_dir=spectre-meltdown-checker/
+	if [ -d $smc_dir ]; then
+		pushd $smc_dir
+		chmod +x spectre-meltdown-checker.sh
+		bash spectre-meltdown-checker.sh > $pwd/$output_dir/'smc_output.txt'
+		popd
+		#rm -r $smc_dir
+	else
+			echo 'Spectre Meltdown Checker was not downloaded.  Please check firewall and network settings and rerun this script, or manually clone from https://github.com/speed47/spectre-meltdown-checker and output to smc_output.txt'
+	fi
+	apt install -qq zip 
+	export output_file='sysinfo_output.zip'
+	zip -r $output_file $output_dir
+	if [ ! -f $output_file ]; then
+		echo 'Error zipping information.  Please zip the contents of '$output_folder' to be sent to the TSE'
+	else
+		echo "complete."
+	fi
+fi
