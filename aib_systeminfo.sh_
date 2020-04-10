@@ -26,7 +26,7 @@ else
 	else
 			echo 'Spectre Meltdown Checker was not downloaded.  Please check firewall and network settings and rerun this script, or manually clone from https://github.com/speed47/spectre-meltdown-checker and output to smc_output.txt'
 	fi
-	apt install -qq zip 
+	apt install -qq -y zip 
 	export output_file='sysinfo_output.zip'
 	zip -r $output_file $output_dir
 	if [ ! -f $output_file ]; then
